@@ -73,12 +73,12 @@ Commentaire des résultats :
 <<selectC>>=
 selectC <- function(d) {
 	C.values <- sapply(c(seq(-10,10,by=1)), function (x) 2^x)
-	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',
-		C=x,cross=5)) )
+	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',
+			kernel='vanilladot',C=x,cross=20)) )
 	tab <- as.data.frame(cbind(C.values,svm.cross))
 	return(tab$C.values[tab$svm.cross==min(svm.cross)])
 }
-selectC(generateDifficultDataset(200))
+selectC(generateDifficultDatasetAlt(100,30))
 @
 \paragraph{5.3.}Détermination du taux d'erreur moyen de SVMs sur les 
 données générées :
@@ -146,7 +146,7 @@ read.prostate.dataset <- function(nomfichier) {
  scalaire de deux vecteurs lorsque les 2 coordonnées ne sont pas à la 
  même échelle :
 %http://www.statmethods.net/advgraphs/axes.html
-%arrows()
+
 <<graphic,fig=T,echo=F>>=
 plot(0,0,tck=1,las=1,xlim=c(0,6),ylim=c(0,6),col.axis="white",col.lab="white",pch=46,bty="n",bty="o",fg="grey")
 arrows(0,0,2,0,col="red")
