@@ -293,7 +293,7 @@ SVM.accuracy.wrt.C <- function(d) {
 	legend("topright",c("Erreur de validation croisée","Erreur à l'apprentissage"),fill=c("black","blue"))
 }
 
-SVM.accuracy.wrt.C(generateDifficultDatasetAlt(100,30))#
+#SVM.accuracy.wrt.C(generateDifficultDatasetAlt(100,30))#
 
 ###
 selectC <- function(d) {
@@ -303,7 +303,7 @@ selectC <- function(d) {
 	return(tab$C.values[tab$svm.cross==min(svm.cross)])
 }
 
-(resultat.selectC <- selectC(generateDifficultDatasetAlt(100,20)))#
+#(resultat.selectC <- selectC(generateDifficultDatasetAlt(100,20)))#
 
 ###
 compare.SVM.mH <- function(nbjeux,fonctionquigenere,taillejeu) {

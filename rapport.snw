@@ -51,7 +51,7 @@ copier-coller tout le script (fichier .R attaché) en une seule fois. Des
 pour un ensemble d'apprentisage $\mathtt{d}$, le taux d'erreur en 
 validation croisée des SVMs sur un jeu de données en fonction du 
 paramètre $\mathtt{C}$:
-<<SVM.accuracy.wrt.C,fig=T>>=
+<<SVMaccuracywrtC,fig=T>>=
 SVM.accuracy.wrt.C <- function(d) {
 	C.values <- sapply(c(seq(-10,10,le=40)), function (x) 2^x)
 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',
@@ -82,7 +82,7 @@ selectC(generateDifficultDataset(200))
 @
 \paragraph{5.3.}Détermination du taux d'erreur moyen de SVMs sur les 
 données générées :
-<<compare.SVM.mH>>=
+<<compareSVMmH>>=
 compare.SVM.mH <- function(nbjeux,fonctionquigenere,taillejeu) {
 	f <- function() {
 		d <- fonctionquigenere(taillejeu)
@@ -97,7 +97,7 @@ compare.SVM.mH <- function(nbjeux,fonctionquigenere,taillejeu) {
 }
 @
 Tracé de la courbe $\mathtt{ROC}$ :
-<<plot.ROC.SVM>>=
+<<plotROCSVM>>=
 
 @
 Comparaison des résultats à l'algorithme de l'hyperplan médiateur :
@@ -119,7 +119,7 @@ Explication intuitive de pourquoi l'un s'en sort mieux que l'autre :\\
 \section{Classification de tissus tumoraux basée sur l'expression génique}
 \paragraph{6.1.}Fonction $\mathtt{read.prostate.dataset}$ pour charger 
 les données de $\mathtt{prostate.txt}$ dans $\mathtt{R}$ :
-<<read.prostate.dataset_0>>=
+<<readprostatedataset_0>>=
 read.prostate.dataset <- function(nomfichier) {
 	prostate <- read.table(nomfichier)
 	colnames(prostate)[1] <- "Y"
@@ -129,7 +129,7 @@ read.prostate.dataset <- function(nomfichier) {
 @
 \paragraph{6.2.}Modification de $\mathtt{read.prostate.dataset}$ pour 
 qu'elle normalise les données en entrée :
-<<read.prostate.dataset>>=
+<<readprostatedataset>>=
 read.prostate.dataset <- function(nomfichier) {
 	prostate <- read.table(nomfichier)
 	colnames(prostate)[1] <- "Y"
@@ -179,10 +179,10 @@ Si par contre on exprime $\vec{v}$ dans $R_{2}$, ce qui donne $\vec{v}=(2,4)$, e
 On constate donc que le produit de deux vecteurs ne possédant pas la même norme n'est pas égale au moins dans certains cas.
 \paragraph{6.4.}Application des deux méthodes de classification 
 (hyperplan médiateur et SVMs) sur le jeu de données "prostate" :
-<<application.mediatorHyperplane.prostate>>=
+<<applicationmediatorHyperplaneprostate,eval=F>>=
 as.vector(t(pred.prostate.mediatorHyperplane <- mediatorHyperplane(prostate)$pred(prostate)))
 @%$
-<<application.SVM.prostate>>=
+<<applicationSVMprostate>>=
 
 @
 \newline
