@@ -1,0 +1,204 @@
+\documentclass{article}
+
+\usepackage[top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry}
+% \pagestyle{headings}
+
+\usepackage[francais]{babel}
+\usepackage[T1]{fontenc}
+% \usepackage[latin1]{inputenc} %windows
+\usepackage[utf8x]{inputenc} %linux
+
+\usepackage{soul}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+\usepackage{wrapfig}
+\usepackage{graphicx}
+
+\title{Module ADC : Classification supervisée \\ Devoir maison -- Seconde partie}
+\date{vendredi 19 décembre 2014}
+\author{Simon \bsc{Besson-Girard} & Nicolas \bsc{Wattiez}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN DOCUMENT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\maketitle
+
+\paragraph{Avant toutes choses,} certaines commandes requièrent 
+l'import de librairies. Pour ce 
+faire, faites les commandes suivantes dans l'invité de commande 
+$\mathtt{R}$:
+<<Packages,eval=F>>=
+install.packages("kernlab")
+install.packages("ROCR")
+install.packages("plotrix")
+library(MASS)
+library(kernlab)
+library(ROCR)
+library(plotrix)
+@
+
+Pour une raison qui nous est inconnue, il est déconseillé de 
+copier-coller tout le script (fichier .R attaché) en une seule fois. Des
+ erreurs de compilation pourraient apparaitre. Il est recommandé 
+ d'utiliser la fonction $\mathtt{source("script.R")}$.
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SECTION 5
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Utilisation des machines à vecteurs supports}
+\paragraph{5.1.}Fonction $\mathtt{SVM.accuracy.wrt.C(d)}$ qui trace, 
+pour un ensemble d'apprentisage $\mathtt{d}$, le taux d'erreur en 
+validation croisée des SVMs sur un jeu de données en fonction du 
+paramètre $\mathtt{C}$:
+<<SVM.accuracy.wrt.C,fig=T>>=
+SVM.accuracy.wrt.C <- function(d) {
+	C.values <- sapply(c(seq(-10,10,le=40)), function (x) 2^x)
+	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',
+			kernel='vanilladot',C=x,cross=20)) )
+	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',
+			kernel='vanilladot',C=x,cross=20)) ) 
+	plot(C.values,svm.cross,type='o',xlab="Valeurs de C",ylab="Erreur",cex=.5,
+			ylim=c(min(c(svm.error,svm.cross)),max(c(svm.cross,svm.error))))
+	points(C.values,svm.error,type='o',col='blue',cex=.5)
+	legend("topright",c("Erreur de validation croisée",
+			"Erreur à l'apprentissage"),fill=c("black","blue"))
+}
+SVM.accuracy.wrt.C(generateDifficultDatasetAlt(100,30))#
+@
+\newline
+Commentaire des résultats :
+\paragraph{5.2.}Fonction $\mathtt{selectC(d)}$ qui choisit une valeur de
+ $\mathtt{C}$ pour un ensemble d'apprentissage $\mathtt{d}$ :
+<<selectC>>=
+selectC <- function(d) {
+	C.values <- sapply(c(seq(-10,10,by=1)), function (x) 2^x)
+	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',
+		C=x,cross=5)) )
+	tab <- as.data.frame(cbind(C.values,svm.cross))
+	return(tab$C.values[tab$svm.cross==min(svm.cross)])
+}
+selectC(generateDifficultDataset(200))
+@
+\paragraph{5.3.}Détermination du taux d'erreur moyen de SVMs sur les 
+données générées :
+<<compare.SVM.mH>>=
+compare.SVM.mH <- function(nbjeux,fonctionquigenere,taillejeu) {
+	f <- function() {
+		d <- fonctionquigenere(taillejeu)
+		C.value <- selectC(d)
+		error.SVM <- mean(sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',
+			kernel='vanilladot',C=C.value,cross=5))) )
+		error.mediatorHyperplane <- error.wrt.n(taillejeu,fonctionquigenere)[1]
+		return(c(error.SVM,error.mediatorHyperplane))
+	}
+	moyennes <- replicate(nbjeux,f())
+	return(c(mean(moyennes[1,]),(mean(moyennes[2,]))))
+}
+@
+Tracé de la courbe $\mathtt{ROC}$ :
+<<plot.ROC.SVM>>=
+
+@
+Comparaison des résultats à l'algorithme de l'hyperplan médiateur :
+<<>>=
+
+@
+\paragraph{5.4.}Représentation graphique du comportement des deux 
+algorithmes sur un ensemble d'apprentissage généré par 
+$\mathtt{generateDifficultDataset}$ :
+<<>>=
+
+@
+Explication intuitive de pourquoi l'un s'en sort mieux que l'autre :\\
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SECTION 6
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Classification de tissus tumoraux basée sur l'expression génique}
+\paragraph{6.1.}Fonction $\mathtt{read.prostate.dataset}$ pour charger 
+les données de $\mathtt{prostate.txt}$ dans $\mathtt{R}$ :
+<<read.prostate.dataset_0>>=
+read.prostate.dataset <- function(nomfichier) {
+	prostate <- read.table(nomfichier)
+	colnames(prostate)[1] <- "Y"
+	for (i in 1:nrow(prostate)) {if (prostate[i,1]==0) {prostate[i,1] <- -1} }
+	return(prostate)
+}
+@
+\paragraph{6.2.}Modification de $\mathtt{read.prostate.dataset}$ pour 
+qu'elle normalise les données en entrée :
+<<read.prostate.dataset>>=
+read.prostate.dataset <- function(nomfichier) {
+	prostate <- read.table(nomfichier)
+	colnames(prostate)[1] <- "Y"
+	for (i in 1:nrow(prostate)) {if (prostate[i,1]==0) {prostate[i,1] <- -1} }
+	prostate.moyenne <- sapply((1:ncol(prostate)),function(x) mean(prostate[,x]) )
+	prostate.ecart.type <- sapply((1:ncol(prostate)),function(x) sd(prostate[,x]) )
+	for (c in 2:ncol(prostate)) {for (l in 1:nrow(prostate)) {
+		prostate[l,c] <- (prostate[l,c]-prostate.moyenne[c])/prostate.ecart.type[c]}
+	}
+	return(prostate)
+}
+@
+\paragraph{6.3.}Montrons ce qui se passe lorsque l'on calcule le produit
+ scalaire de deux vecteurs lorsque les 2 coordonnées ne sont pas à la 
+ même échelle :
+%http://www.statmethods.net/advgraphs/axes.html
+%arrows()
+<<graphic,fig=T,echo=F>>=
+plot(0,0,tck=1,las=1,xlim=c(0,6),ylim=c(0,6),col.axis="white",col.lab="white",pch=46,bty="n",bty="o",fg="grey")
+arrows(0,0,2,0,col="red")
+arrows(0,0,0,2,col="red")
+arrows(3,0,3,1,col="blue")
+arrows(3,0,4,0,col="blue")
+text(0,2.2,"V1")
+text(2.2,0,"V2")
+text(3,1.2,"V3")
+text(4.2,0,"V4")
+arrows(0,0,1,2,col="black")
+arrows(3,0,4,2,col="black")
+text(1.1,2.1,"u")
+text(4.1,2.1,"v")
+@
+\newline
+Déduction de pourquoi il est impératif de normaliser les données avant 
+de travailler avec :\\
+Soit $R_{1}$ le référentiel composé par les vecteurs $V_{1}$ et $V_{2}$,
+ $R_{2}$ le référentiel composé par les vecteurs $V_{3}$ et $V_{4}$, 
+ $\vec{u}$ et $\vec{v}$ deux vecteurs. \\
+Si l'on regarde les coordonnées de $\vec{u}$ et $\vec{v}$ exprimée dans 
+$R_{1}$, on obtient:
+\begin{itemize}
+	\item{$\vec{u}=(1,2)$}
+	\item{$\vec{v}=(1,2)$}
+\end{itemize}
+Le produit scalaire de ces deux vecteurs est alors égale à 5.
+Si par contre on exprime $\vec{v}$ dans $R_{2}$, ce qui donne $\vec{v}=(2,4)$, et qu'on calcule leur produit scalaire, on obtient 10.
+On constate donc que le produit de deux vecteurs ne possédant pas la même norme n'est pas égale au moins dans certains cas.
+\paragraph{6.4.}Application des deux méthodes de classification 
+(hyperplan médiateur et SVMs) sur le jeu de données "prostate" :
+<<application.mediatorHyperplane.prostate>>=
+as.vector(t(pred.prostate.mediatorHyperplane <- mediatorHyperplane(prostate)$pred(prostate)))
+@%$
+<<application.SVM.prostate>>=
+
+@
+\newline
+Discussion des résultats obtenus :
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SECTION BONUS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newpage
+\section{Bonus : algorithme k-NN}
+\paragraph{7.1.}Algorithme des \textit{k} plus proches voisins :
+<<>>=
+
+@
+\paragraph{7.2.}Comparaison de ses performances aux SVMS :
+<<>>=
+
+@
+\end{document}
