@@ -229,22 +229,6 @@ CrossValidation <- function(f,d,N,pred = TRUE) {
 #preds <- CrossValidation(mediatorHyperplane,dataset,7)#
 #evaluation(preds,dataset$Y)#
 
-error.wrt.n <- function(n,gen) {
-    f <- function() {
-        d <- gen(n)
-        preds <- CrossValidation(mediatorHyperplane,d,5)
-        evaluation(preds,d$Y)$error
-    }
-    k <- 30
-    error <- replicate(k,f())
-    # on renvoie la moyenne sur 30 essais et l'IC à 95%
-    error_bar <- mean(error)
-    eps <- qnorm(0.975) * sd(error) / sqrt(k)
-    c(error_bar, error_bar - eps, error_bar + eps)
-}
-
-#error.wrt.n(20,generateDifficultDataset)#
-
 plot.error.wrt.n <- function(gen) {
     points <- seq(from=5, to=50, by=5)
     data <- sapply(points, function(n) error.wrt.n(n,gen))
@@ -254,13 +238,29 @@ plot.error.wrt.n <- function(gen) {
 #plot.error.wrt.n(generateDifficultDataset)#
 
 # La même chose mais avec la méthode du hold-out
-error.wrt.n <- function(n,gen) {
+error.wrt.n <- function(d,n,gen) {
     f <- function() {
         d_test <- gen(1000)
-        preds <- holdOut(mediatorHyperplane,gen(n),d_test)
+        preds <- holdOut(mediatorHyperplane,gen(d,n),d_test)
         evaluation(preds,d_test$Y)$accuracy
     }
     k <- 100
+    error <- replicate(k,f())
+    # on renvoie la moyenne sur 30 essais et l'IC à 95%
+    error_bar <- mean(error)
+    eps <- qnorm(0.975) * sd(error) / sqrt(k)
+    c(error_bar, error_bar - eps, error_bar + eps)
+}
+
+#error.wrt.n(20,generateDifficultDataset)#
+
+error.wrt.n <- function(dimension,n,gen) {
+    f <- function() {
+        d <- gen(dimension,n)
+        preds <- CrossValidation(mediatorHyperplane,d,5)
+        evaluation(preds,d$Y)$error
+    }
+    k <- 30
     error <- replicate(k,f())
     # on renvoie la moyenne sur 30 essais et l'IC à 95%
     error_bar <- mean(error)
@@ -285,7 +285,7 @@ plot.error.wrt.n <- function(gen) {
 
 ###
 SVM.accuracy.wrt.C <- function(d) {
-	C.values <- sapply(c(seq(-10,10,le=500)), function (x) 2^x)
+	C.values <- sapply(c(seq(-10,10,le=100)), function (x) 2^x)
 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) )
 	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) ) 
 	plot(C.values,svm.cross,type='o',xlab="Valeurs de C",ylab="Erreur",cex=.5,ylim=c(min(c(svm.error,svm.cross)),max(c(svm.cross,svm.error))))# ,log="x")
@@ -297,26 +297,34 @@ SVM.accuracy.wrt.C <- function(d) {
 
 ###
 selectC <- function(d) {
-	C.values <- sapply(c(seq(-10,10,by=1)), function (x) 2^x)
+	C.values <- sapply(c(seq(-10,10,le=100)), function (x) 2^x)
 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) )
 	tab <- as.data.frame(cbind(C.values,svm.cross))
-	return(tab$C.values[tab$svm.cross==min(svm.cross)])
+	return(tab$C.values[tab$svm.cross==min(svm.cross)][1])
 }
 
-#(resultat.selectC <- selectC(generateDifficultDatasetAlt(100,30)))#
+#print(selectC(generateDifficultDatasetAlt(100,30)))#
 
 ###
-compare.SVM.mH <- function(nbjeux,fonctionquigenere,taillejeu) {
+compare.SVM.mH <- function(nbjeux,fonctionquigenere,dimension,taillejeu) {
 	f <- function() {
-		d <- fonctionquigenere(taillejeu)
+		d <- fonctionquigenere(dimension,taillejeu)
+		print("remplissage de C.value...")#
 		C.value <- selectC(d)
-		error.SVM <- mean(sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=C.value,cross=5))) )
-		error.mediatorHyperplane <- error.wrt.n(taillejeu,fonctionquigenere)[1]
+		print("C.value remplie")#
+		print("calcul de error.SVM...")#
+		error.SVM <- mean(sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=C.value,cross=20))) )
+		print("error.SVM remplie...")#
+		print("calcul de error.mediatorHyperplane...")#
+		error.mediatorHyperplane <- error.wrt.n(dimension,taillejeu,fonctionquigenere)[1]
+		print("error.mediatorHyperplane remplie...")#
 		return(c(error.SVM,error.mediatorHyperplane))
 	}
 	moyennes <- replicate(nbjeux,f())
 	return(c(mean(moyennes[1,]),(mean(moyennes[2,]))))
 }
+
+print(compare.SVM.mH(3,generateDifficultDatasetAlt,100,30))#
 
 ###
 plot.ROC.SVM <- function() {
