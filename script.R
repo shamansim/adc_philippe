@@ -303,7 +303,7 @@ selectC <- function(d) {
 	return(tab$C.values[tab$svm.cross==min(svm.cross)])
 }
 
-#(resultat.selectC <- selectC(generateDifficultDatasetAlt(100,20)))#
+#(resultat.selectC <- selectC(generateDifficultDatasetAlt(100,30)))#
 
 ###
 compare.SVM.mH <- function(nbjeux,fonctionquigenere,taillejeu) {
