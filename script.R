@@ -278,9 +278,12 @@ plot.error.wrt.n <- function(gen) {
 
 #plot.error.wrt.n(generateDifficultDataset)#
 
-
+########################################################################
+########################################################################
 ########################################################################
 #	5
+########################################################################
+########################################################################
 ########################################################################
 
 ###
@@ -374,7 +377,7 @@ text(1.1,2.1,"u")
 text(4.1,2.1,"v")
 }
 
-CrossValidation.SVM <- function(f=generateDifficultDatasetAlt,d=100,N=30) {
+CrossValidation.SVM <- function(f=predict,d=generateDifficultDatasetAlt(100,30),N=30) {
     n <- dim(d)[1]
     permutation <- sample(1:n)
     d <- d[permutation,]
@@ -387,9 +390,8 @@ CrossValidation.SVM <- function(f=generateDifficultDatasetAlt,d=100,N=30) {
         test_set <- d[test.idx,]
         ##########
         C.value <- selectC(train_set)
-        svm<-ksvm(Y~.,data=d_train_set,type='C-svc',kernel='vanilladot',C=C.value) 
-        classifier <- f(train_set)
-        classifier$f(test_set)
+        svm<-ksvm(Y~.,data=train_set,type='C-svc',kernel='vanilladot',C=C.value) 
+        f(svm,test_set,type='decision')
     }
 
     preds <- unlist(lapply(1:N,fold))
@@ -418,3 +420,4 @@ CrossValidation.SVM <- function(f=generateDifficultDatasetAlt,d=100,N=30) {
 			#(ksvm
 				#(Y~.,data=d,type='C-svc',kernel='vanilladot',C=selectC
 					#(d)),generateDifficultDatasetAlt(100,30),type='decision'),generateDifficultDatasetAlt(100,30)$Y),"sens","spec"))
+
