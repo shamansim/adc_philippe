@@ -70,88 +70,6 @@ paramètre $\mathtt{C}$:
 + }
 > SVM.accuracy.wrt.C(generateDifficultDatasetAlt(100,30))#
 \end{Sinput}
-\begin{Soutput}
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
-\end{Soutput}
 \end{Schunk}
 \includegraphics{rapport-SVMaccuracywrtC}
 \newline
@@ -162,36 +80,20 @@ Commentaire des résultats :
 \begin{Sinput}
 > selectC <- function(d) {
 + 	C.values <- sapply(c(seq(-10,10,by=1)), function (x) 2^x)
-+ 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',
-+ 		C=x,cross=5)) )
++ 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',
++ 			kernel='vanilladot',C=x,cross=20)) )
 + 	tab <- as.data.frame(cbind(C.values,svm.cross))
 + 	return(tab$C.values[tab$svm.cross==min(svm.cross)])
 + }
-> selectC(generateDifficultDataset(200))
+> resultat.selectC <- selectC(generateDifficultDatasetAlt(100,30))
+\end{Sinput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Sinput}
+> resultat.selectC
 \end{Sinput}
 \begin{Soutput}
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
- Setting default kernel parameters  
-[1]    8   16   32   64  128  512 1024
+[1] 0.001953125
 \end{Soutput}
 \end{Schunk}
 \paragraph{5.3.}Détermination du taux d'erreur moyen de SVMs sur les 
@@ -272,7 +174,7 @@ qu'elle normalise les données en entrée :
  scalaire de deux vecteurs lorsque les 2 coordonnées ne sont pas à la 
  même échelle :
 %http://www.statmethods.net/advgraphs/axes.html
-%arrows()
+
 \includegraphics{rapport-graphic}
 \newline
 Déduction de pourquoi il est impératif de normaliser les données avant 
