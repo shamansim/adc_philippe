@@ -324,7 +324,7 @@ compare.SVM.mH <- function(nbjeux,fonctionquigenere,dimension,taillejeu) {
 	return(c(mean(moyennes[1,]),(mean(moyennes[2,]))))
 }
 
-print(compare.SVM.mH(3,generateDifficultDatasetAlt,100,30))#
+#print(compare.SVM.mH(3,generateDifficultDatasetAlt,100,30))#
 
 ###
 plot.ROC.SVM <- function() {
@@ -368,8 +368,8 @@ text(0,2.2,"V1")
 text(2.2,0,"V2")
 text(3,1.2,"V3")
 text(4.2,0,"V4")
-arrows(0,0,1,2,col="black")
-arrows(3,0,4,2,col="black")
+arrows(0,0,2,4,col="black")
+arrows(3,0,5,4,col="black")
 text(1.1,2.1,"u")
 text(4.1,2.1,"v")
 }
@@ -398,23 +398,23 @@ CrossValidation.SVM <- function(f=generateDifficultDatasetAlt,d=100,N=30) {
     preds[order(permutation)]
 }
 
-svm<-ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=1) 
+#svm<-ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=1) 
 
-predict(svm,d,type='decision')
+#predict(svm,d,type='decision')
 
 #générer la courbe ROC
-d1<-generateDifficultDatasetAlt(100,30)#
-d2<-generateDifficultDatasetAlt(100,30)#
-svm1<-ksvm(Y~.,data=d1,type='C-svc',kernel='vanilladot',C=selectC(d))
-svm2<-ksvm(Y~.,data=d2,type='C-svc',kernel='vanilladot',C=selectC(d))
-predictor <- prediction(coef(svm),ymatrix(svm2))
-perfector <- performance(predictor, measure = "sens", x.measure = "spec") 
-plot(perfector)
+#d1<-generateDifficultDatasetAlt(100,30)#
+#d2<-generateDifficultDatasetAlt(100,30)#
+#svm1<-ksvm(Y~.,data=d1,type='C-svc',kernel='vanilladot',C=selectC(d))
+#svm2<-ksvm(Y~.,data=d2,type='C-svc',kernel='vanilladot',C=selectC(d))
+#predictor <- prediction(coef(svm),ymatrix(svm2))
+#perfector <- performance(predictor, measure = "sens", x.measure = "spec") 
+#plot(perfector)
 
 
-plot(performance
-	(prediction
-		(predict
-			(ksvm
-				(Y~.,data=d,type='C-svc',kernel='vanilladot',C=selectC
-					(d)),generateDifficultDatasetAlt(100,30),type='decision'),generateDifficultDatasetAlt(100,30)$Y),"sens","spec"))
+#plot(performance
+#	(prediction
+		#(predict
+			#(ksvm
+				#(Y~.,data=d,type='C-svc',kernel='vanilladot',C=selectC
+					#(d)),generateDifficultDatasetAlt(100,30),type='decision'),generateDifficultDatasetAlt(100,30)$Y),"sens","spec"))

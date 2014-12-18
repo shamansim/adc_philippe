@@ -160,10 +160,10 @@ text(0,2.2,"V1")
 text(2.2,0,"V2")
 text(3,1.2,"V3")
 text(4.2,0,"V4")
-arrows(0,0,1,2,col="black")
-arrows(3,0,4,2,col="black")
-text(1.1,2.1,"u")
-text(4.1,2.1,"v")
+arrows(0,0,2,4,col="black")
+arrows(3,0,5,4,col="black")
+text(2.1,4.1,"u")
+text(5.1,4.1,"v")
 @
 \newline
 Déduction de pourquoi il est impératif de normaliser les données avant 
