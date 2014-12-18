@@ -6,10 +6,10 @@
 #install.packages("kernlab")
 #install.packages("ROCR")
 #install.packages("plotrix")
-library(MASS)
-library(kernlab)
+library(MASS) #pour mvnorm
+library(kernlab) #pour SVM
 library(ROCR)
-library(plotrix)
+library(plotrix) #pour plotCI
 
 ########################################################################
 #	SCRIPT PREMIERE PARTIE : CORRECTION DE L'ENSEIGNANT
@@ -373,3 +373,48 @@ arrows(3,0,4,2,col="black")
 text(1.1,2.1,"u")
 text(4.1,2.1,"v")
 }
+
+CrossValidation.SVM <- function(f=generateDifficultDatasetAlt,d=100,N=30) {
+    n <- dim(d)[1]
+    permutation <- sample(1:n)
+    d <- d[permutation,]
+
+    fold <- function(i) {
+        a <- round(n * (i - 1) / N + 1)
+        b <- round(n * i / N)
+        test.idx <- a:b
+        train_set <- d[- test.idx,]
+        test_set <- d[test.idx,]
+        ##########
+        C.value <- selectC(train_set)
+        svm<-ksvm(Y~.,data=d_train_set,type='C-svc',kernel='vanilladot',C=C.value) 
+        classifier <- f(train_set)
+        classifier$f(test_set)
+    }
+
+    preds <- unlist(lapply(1:N,fold))
+    
+    # pour finir, on remet les prédictions dans le bon ordre
+    preds[order(permutation)]
+}
+
+svm<-ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=1) 
+
+predict(svm,d,type='decision')
+
+#générer la courbe ROC
+d1<-generateDifficultDatasetAlt(100,30)#
+d2<-generateDifficultDatasetAlt(100,30)#
+svm1<-ksvm(Y~.,data=d1,type='C-svc',kernel='vanilladot',C=selectC(d))
+svm2<-ksvm(Y~.,data=d2,type='C-svc',kernel='vanilladot',C=selectC(d))
+predictor <- prediction(coef(svm),ymatrix(svm2))
+perfector <- performance(predictor, measure = "sens", x.measure = "spec") 
+plot(perfector)
+
+
+plot(performance
+	(prediction
+		(predict
+			(ksvm
+				(Y~.,data=d,type='C-svc',kernel='vanilladot',C=selectC
+					(d)),generateDifficultDatasetAlt(100,30),type='decision'),generateDifficultDatasetAlt(100,30)$Y),"sens","spec"))
