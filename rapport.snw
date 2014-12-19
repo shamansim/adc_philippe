@@ -51,7 +51,7 @@ copier-coller tout le script (fichier .R attaché) en une seule fois. Des
 pour un ensemble d'apprentisage $\mathtt{d}$, le taux d'erreur en 
 validation croisée des SVMs sur un jeu de données en fonction du 
 paramètre $\mathtt{C}$:
-<<SVMaccuracywrtC,fig=T,results=hide,eval=F>>=
+<<SVMaccuracywrtC,fig=T,results=hide,eval=T>>=
 SVM.accuracy.wrt.C <- function(d) {
 	C.values <- sapply(c(seq(-10,10,le=40)), function (x) 2^x)
 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',
@@ -74,7 +74,7 @@ méthode SVM est efficace. En effet, elle produit toujours le même taux d'erreu
 quelque soit la valeur du paramètre C choisie, mis à part proche des faibles valeurs.
 \paragraph{5.2.}Fonction $\mathtt{selectC(d)}$ qui choisit une valeur de
  $\mathtt{C}$ pour un ensemble d'apprentissage $\mathtt{d}$ :
-<<selectC,results=hide,eval=F>>=
+<<selectC,results=hide,eval=T>>=
 selectC <- function(d) {
 	C.values <- sapply(c(seq(-10,10,le=40)), function (x) 2^x)
 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',
@@ -88,12 +88,12 @@ selectC <- function(d) {
 }
 resultat.selectC <- selectC(generateDifficultDatasetAlt(100,30))
 @
-<<resultatselectC,eval=F>>=
+<<resultatselectC,eval=T>>=
 resultat.selectC
 @
 \paragraph{5.3.}Détermination du taux d'erreur moyen de SVMs sur les 
 données générées et comparaison avec l'algorithme mediatorHyperplane :
-<<compareSVMmH,results=hide,eval=F>>=
+<<compareSVMmH,results=hide,eval=T>>=
 compare.SVM.mH <- function(nbjeux,fonctionquigenere,dimension,taillejeu) {
 	f <- function() {
 		d <- fonctionquigenere(dimension,taillejeu)
@@ -110,11 +110,11 @@ compare.SVM.mH <- function(nbjeux,fonctionquigenere,dimension,taillejeu) {
 }
 resultat.compareSVM.mH <- compare.SVM.mH(3,generateDifficultDatasetAlt,100,30)
 @
-<<resultatcompareSVMmH,eval=F>>=
+<<resultatcompareSVMmH,eval=T>>=
 resultat.compareSVM.mH
 @
 Tracé de la courbe $\mathtt{ROC}$ :
-<<crossValidation.SVM>>=
+<<crossValidation.SVM,eval=T>>=
 CrossValidation.SVM <- function(f=predict,d=generateDifficultDatasetAlt(100,30),N=5) {
     n <- dim(d)[1]
     permutation <- sample(1:n)
@@ -137,7 +137,7 @@ CrossValidation.SVM <- function(f=predict,d=generateDifficultDatasetAlt(100,30),
     preds[order(permutation)]
 }
 @
-<<plotROCSVM,fig=T,results=hide>>=
+<<plotROCSVM,fig=T,results=hide,eval=T>>=
 plot.ROC.SVM <- function(d=generateDifficultDatasetAlt(100,30),N=5) {
 	resultat.cv.SVM<-CrossValidation.SVM(d=d,N=N)
 	predictor<-prediction(resultat.cv.SVM,d$Y)

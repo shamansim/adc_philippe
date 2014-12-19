@@ -235,7 +235,7 @@ plot.error.wrt.n <- function(gen) {
     plotCI(points,data[1,],li=data[2,],ui=data[3,])
 }
 
-#plot.error.wrt.n(generateDifficultDataset)#
+plot.error.wrt.n(generateDifficultDataset)#
 
 # La même chose mais avec la méthode du hold-out
 error.wrt.n <- function(d,n,gen) {
@@ -291,7 +291,8 @@ SVM.accuracy.wrt.C <- function(d) {
 	C.values <- sapply(c(seq(-10,10,le=40)), function (x) 2^x)
 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) )
 	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) ) 
-	plot(C.values,svm.cross,type='o',xlab="Valeurs de C",ylab="Erreur",cex=.5,ylim=c(min(c(svm.error,svm.cross)),max(c(svm.cross,svm.error))))# ,log="x")
+	plot(C.values,svm.cross,type='o',xlab="Valeurs de C",ylab="Erreur",cex=.5,ylim=c(min(c(svm.error,svm.cross)),max(c(svm.cross,svm.error))) ,log="x")
+	plotCI(points,data[1,],li=data[2,],ui=data[3,])
 	points(C.values,svm.error,type='o',col='blue',cex=.5)
 	legend("topright",c("Erreur de validation croisée","Erreur à l'apprentissage"),fill=c("black","blue"))
 }
