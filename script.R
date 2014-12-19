@@ -288,22 +288,29 @@ plot.error.wrt.n <- function(gen) {
 
 ###
 SVM.accuracy.wrt.C <- function(d) {
-	C.values <- sapply(c(seq(-10,10,le=100)), function (x) 2^x)
-	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) )
-	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) ) 
+	C.values <- sapply(c(seq(-10,10,le=40)), function (x) 2^x)
+	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=30)) )
+	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=30)) ) 
 	plot(C.values,svm.cross,type='o',xlab="Valeurs de C",ylab="Erreur",cex=.5,ylim=c(min(c(svm.error,svm.cross)),max(c(svm.cross,svm.error))))# ,log="x")
 	points(C.values,svm.error,type='o',col='blue',cex=.5)
 	legend("topright",c("Erreur de validation croisée","Erreur à l'apprentissage"),fill=c("black","blue"))
 }
 
-#SVM.accuracy.wrt.C(generateDifficultDatasetAlt(100,30))#
+#SVM.accuracy.wrt.C(generateDifficultDatasetAlt(100,40))#
+
+#train_set <- generateDifficultDatasetAlt(1000,30)#
+#test_set <- generateDifficultDatasetAlt(1000,30)#
+#preds <- mediatorHyperplane(train_set)$pred(test_set)
+#resultat.evaluation <- evaluation(preds,test_set$Y)
 
 ###
 selectC <- function(d) {
-	C.values <- sapply(c(seq(-10,10,le=100)), function (x) 2^x)
+	C.values <- sapply(c(seq(-10,10,le=40)), function (x) 2^x)
 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) )
-	tab <- as.data.frame(cbind(C.values,svm.cross))
-	return(tab$C.values[tab$svm.cross==min(svm.cross)][1])
+	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) ) 
+	tab <- as.data.frame(cbind(C.values,svm.cross,svm.error))
+	#sur l'ensemble ou error vaut 0 on cherche le minimum d'erreur de validation croisée
+	return(tab$C.values[tab$C.values>1][tab$svm.error==0][tab$svm.cross==min(svm.cross)])
 }
 
 #print(selectC(generateDifficultDatasetAlt(100,30)))#
@@ -330,11 +337,13 @@ compare.SVM.mH <- function(nbjeux,fonctionquigenere,dimension,taillejeu) {
 #print(compare.SVM.mH(3,generateDifficultDatasetAlt,100,30))#
 
 ###
-plot.ROC.SVM <- function() {
-	predictor <- prediction(f.Difficult(dataset.generateDifficultDataset[,1:2]),generateDifficultDataset(100)$y)
-	perfector <- performance(predictor, measure = "sens", x.measure = "spec") 
+plot.ROC.SVM <- function(d=generateDifficultDatasetAlt(100,30),N=5) {
+	resultat.cv.SVM<-CrossValidation.SVM(d=d,N=N)
+	predictor<-prediction(resultat.cv.SVM,d$Y)
+	perfector<-performance(predictor,measure="sens",x.measure="spec")
 	plot(perfector)
 }
+
 
 ###
 read.prostate.dataset <- function(nomfichier) {
@@ -377,7 +386,8 @@ text(1.1,2.1,"u")
 text(4.1,2.1,"v")
 }
 
-CrossValidation.SVM <- function(f=predict,d=generateDifficultDatasetAlt(100,30),N=30) {
+###
+CrossValidation.SVM <- function(f=predict,d=generateDifficultDatasetAlt(100,30),N=5) {
     n <- dim(d)[1]
     permutation <- sample(1:n)
     d <- d[permutation,]
@@ -388,7 +398,6 @@ CrossValidation.SVM <- function(f=predict,d=generateDifficultDatasetAlt(100,30),
         test.idx <- a:b
         train_set <- d[- test.idx,]
         test_set <- d[test.idx,]
-        ##########
         C.value <- selectC(train_set)
         svm<-ksvm(Y~.,data=train_set,type='C-svc',kernel='vanilladot',C=C.value) 
         f(svm,test_set,type='decision')
@@ -399,25 +408,3 @@ CrossValidation.SVM <- function(f=predict,d=generateDifficultDatasetAlt(100,30),
     # pour finir, on remet les prédictions dans le bon ordre
     preds[order(permutation)]
 }
-
-#svm<-ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=1) 
-
-#predict(svm,d,type='decision')
-
-#générer la courbe ROC
-#d1<-generateDifficultDatasetAlt(100,30)#
-#d2<-generateDifficultDatasetAlt(100,30)#
-#svm1<-ksvm(Y~.,data=d1,type='C-svc',kernel='vanilladot',C=selectC(d))
-#svm2<-ksvm(Y~.,data=d2,type='C-svc',kernel='vanilladot',C=selectC(d))
-#predictor <- prediction(coef(svm),ymatrix(svm2))
-#perfector <- performance(predictor, measure = "sens", x.measure = "spec") 
-#plot(perfector)
-
-
-#plot(performance
-#	(prediction
-		#(predict
-			#(ksvm
-				#(Y~.,data=d,type='C-svc',kernel='vanilladot',C=selectC
-					#(d)),generateDifficultDatasetAlt(100,30),type='decision'),generateDifficultDatasetAlt(100,30)$Y),"sens","spec"))
-
