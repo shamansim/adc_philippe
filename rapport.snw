@@ -83,10 +83,10 @@ selectC <- function(d) {
 	tab <- as.data.frame(cbind(C.values,svm.cross,svm.error))
 	#sur l'ensemble où l'erreur à l'apprentissage est nul, on cherche le minimum 
 	#d'erreur de validation croisée
-	return(tab$C.values[tab$C.values>1][tab$svm.error==0][tab$svm.cross==min(svm.cross)][1])
+	return(tab$C.values[tab$svm.error==0][tab$svm.cross==min(svm.cross)][1])
 }
 resultat.selectC <- selectC(generateDifficultDatasetAlt(100,30))
-@
+@%$
 <<resultatselectC,eval=T>>=
 resultat.selectC
 @

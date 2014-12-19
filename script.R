@@ -410,3 +410,15 @@ CrossValidation.SVM <- function(f=predict,d=generateDifficultDatasetAlt(100,30),
     # pour finir, on remet les prédictions dans le bon ordre
     preds[order(permutation)]
 }
+
+#courbe ROC question 5.4
+#génération jeux de données
+d_test <- generateDifficultDatasetAlt(100,30)
+d_train <- generateDifficultDatasetAlt(100,30)
+#mediatorHyperplane
+pred_scores <- CrossValidation(mediatorHyperplane,d_train,20,pred=F)#
+plot(performance(prediction(pred_scores,d_test$Y),"sens","spec"))#
+#SVM
+x11()
+pred_scores <- CrossValidation.SVM(f=predict,d=d_train,N=20)
+plot(performance(prediction(pred_scores,d_test$Y),"sens","spec"))#
