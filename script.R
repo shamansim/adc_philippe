@@ -235,7 +235,7 @@ plot.error.wrt.n <- function(gen) {
     plotCI(points,data[1,],li=data[2,],ui=data[3,])
 }
 
-plot.error.wrt.n(generateDifficultDataset)#
+#plot.error.wrt.n(generateDifficultDataset)#
 
 # La même chose mais avec la méthode du hold-out
 error.wrt.n <- function(d,n,gen) {
@@ -292,7 +292,7 @@ SVM.accuracy.wrt.C <- function(d) {
 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) )
 	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) ) 
 	plot(C.values,svm.cross,type='o',xlab="Valeurs de C",ylab="Erreur",cex=.5,ylim=c(min(c(svm.error,svm.cross)),max(c(svm.cross,svm.error))) ,log="x")
-	plotCI(points,data[1,],li=data[2,],ui=data[3,])
+	#plotCI(points,data[1,],li=data[2,],ui=data[3,])
 	points(C.values,svm.error,type='o',col='blue',cex=.5)
 	legend("topright",c("Erreur de validation croisée","Erreur à l'apprentissage"),fill=c("black","blue"))
 }
@@ -310,8 +310,8 @@ selectC <- function(d=generateDifficultDatasetAlt(100,30)) {
 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) )
 	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) ) 
 	tab <- as.data.frame(cbind(C.values,svm.cross,svm.error))
-	#sur l'ensemble où l'erreur à l'apprentissage est nul, on cherche le minimum d'erreur de validation croisée
-	return(tab$C.values[tab$C.values>1][tab$svm.error==0][tab$svm.cross==min(svm.cross)][1])
+	#sur l'ensemble où l'erreur à l'apprentissage est nulle, on cherche le minimum d'erreur de validation croisée
+	return(tab$C.values[tab$svm.error==0][tab$svm.cross==min(svm.cross)][1])
 }
 
 ###
@@ -413,12 +413,50 @@ CrossValidation.SVM <- function(f=predict,d=generateDifficultDatasetAlt(100,30),
 
 #courbe ROC question 5.4
 #génération jeux de données
-d_test <- generateDifficultDatasetAlt(100,30)
-d_train <- generateDifficultDatasetAlt(100,30)
+#d_test <- generateDifficultDatasetAlt(100,30)#
+#d_train <- generateDifficultDatasetAlt(100,30)#
+
 #mediatorHyperplane
-pred_scores <- CrossValidation(mediatorHyperplane,d_train,20,pred=F)#
-plot(performance(prediction(pred_scores,d_test$Y),"sens","spec"))#
+#pred_scores <- CrossValidation(mediatorHyperplane,d_train,20,pred=F)#
+#predss<-prediction(pred_scores,d_test$Y)#
+#plot(performance(predss,"sens","spec"))#
+#perf <- performance(predss, "auc")#
+#auc.mediatorHyperplane <- perf@y.values[[1]]#
+
+C.prostate <- 0.00824036
+#error.SVM <- mean(sapply(C.values,function(x) cross(ksvm(Y~.,data=prostate,type='C-svc',kernel='vanilladot',C=C.prostate,cross=30))))
+erreur.SVM <- 0.07827778
+#error.wrt.n.prostate <- function(d) {
+#    f <- function() {
+#        preds <- CrossValidation(mediatorHyperplane,d,5)
+#        evaluation(preds,d$Y)$error
+#    }
+#    k <- 30
+#    error <- replicate(k,f())
+#    # on renvoie la moyenne sur 30 essais et l'IC à 95%
+#    error_bar <- mean(error)
+#    eps <- qnorm(0.975) * sd(error) / sqrt(k)
+#    c(error_bar, error_bar - eps, error_bar + eps)
+#}
+#erreur.mediatorHyperplane <- error.wrt.n.prostate(prostate)[1]
+erreur.mediatorHyperplane <- 0.3836601
+
+
+
 #SVM
-x11()
-pred_scores <- CrossValidation.SVM(f=predict,d=d_train,N=20)
-plot(performance(prediction(pred_scores,d_test$Y),"sens","spec"))#
+#x11()#
+#pred_scores <- CrossValidation.SVM(f=predict,d=d_train,N=20)#
+#predss<-prediction(pred_scores,d_test$Y)#
+#plot(performance(predss,"sens","spec"))#
+#perf <- performance(predss, "auc")#
+#auc.svm <- perf@y.values[[1]]#
+
+library("parallel")
+library("foreach")
+library("doParallel")
+cl <- makeCluster(detectCores())
+registerDoParallel(cl, cores = detectCores() - 1)
+
+
+
+stopCluster(cl)

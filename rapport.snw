@@ -147,9 +147,27 @@ plot.ROC.SVM(N=20)
 @%$
 \paragraph{5.4.}Représentation graphique du comportement des deux 
 algorithmes sur un ensemble d'apprentissage généré par 
-$\mathtt{generateDifficultDataset}$ :
-<<>>=
+$\mathtt{generateDifficultDatasetAlt}$ :
+<<comportement,fig=T,results=hide,eval=T>>=
+#courbe ROC question 5.4
+#génération jeux de données
+d_test <- generateDifficultDatasetAlt(100,30)
+d_train <- generateDifficultDatasetAlt(100,30)
 
+#mediatorHyperplane
+pred_scores <- CrossValidation(mediatorHyperplane,d_train,20,pred=F)#
+predss<-prediction(pred_scores,d_test$Y)
+plot(performance(predss,"sens","spec"),main="ROC mediatorHyperplane")#
+perf <- performance(predss, "auc")
+auc.mediatorHyperplane <- perf@y.values[[1]]
+
+#SVM
+x11()
+pred_scores <- CrossValidation.SVM(f=predict,d=d_train,N=20)
+predss<-prediction(pred_scores,d_test$Y)
+plot(performance(predss,"sens","spec"),main="ROC SVM")#
+perf <- performance(predss, "auc")
+auc.svm <- perf@y.values[[1]]
 @
 Explication intuitive de pourquoi l'un s'en sort mieux que l'autre :\\
 
