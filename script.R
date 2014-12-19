@@ -289,14 +289,14 @@ plot.error.wrt.n <- function(gen) {
 ###
 SVM.accuracy.wrt.C <- function(d) {
 	C.values <- sapply(c(seq(-10,10,le=40)), function (x) 2^x)
-	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=30)) )
-	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=30)) ) 
+	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) )
+	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) ) 
 	plot(C.values,svm.cross,type='o',xlab="Valeurs de C",ylab="Erreur",cex=.5,ylim=c(min(c(svm.error,svm.cross)),max(c(svm.cross,svm.error))))# ,log="x")
 	points(C.values,svm.error,type='o',col='blue',cex=.5)
 	legend("topright",c("Erreur de validation croisée","Erreur à l'apprentissage"),fill=c("black","blue"))
 }
 
-#SVM.accuracy.wrt.C(generateDifficultDatasetAlt(100,40))#
+#SVM.accuracy.wrt.C(generateDifficultDatasetAlt(100,30))#
 
 #train_set <- generateDifficultDatasetAlt(1000,30)#
 #test_set <- generateDifficultDatasetAlt(1000,30)#
@@ -304,16 +304,14 @@ SVM.accuracy.wrt.C <- function(d) {
 #resultat.evaluation <- evaluation(preds,test_set$Y)
 
 ###
-selectC <- function(d) {
+selectC <- function(d=generateDifficultDatasetAlt(100,30)) {
 	C.values <- sapply(c(seq(-10,10,le=40)), function (x) 2^x)
 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) )
 	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=x,cross=20)) ) 
 	tab <- as.data.frame(cbind(C.values,svm.cross,svm.error))
-	#sur l'ensemble ou error vaut 0 on cherche le minimum d'erreur de validation croisée
-	return(tab$C.values[tab$C.values>1][tab$svm.error==0][tab$svm.cross==min(svm.cross)])
+	#sur l'ensemble où l'erreur à l'apprentissage est nul, on cherche le minimum d'erreur de validation croisée
+	return(tab$C.values[tab$C.values>1][tab$svm.error==0][tab$svm.cross==min(svm.cross)][1])
 }
-
-#print(selectC(generateDifficultDatasetAlt(100,30)))#
 
 ###
 compare.SVM.mH <- function(nbjeux,fonctionquigenere,dimension,taillejeu) {
@@ -331,7 +329,10 @@ compare.SVM.mH <- function(nbjeux,fonctionquigenere,dimension,taillejeu) {
 		return(c(error.SVM,error.mediatorHyperplane))
 	}
 	moyennes <- replicate(nbjeux,f())
-	return(c(mean(moyennes[1,]),(mean(moyennes[2,]))))
+	return(list(
+		error.SVM = mean(moyennes[1,]),
+		error.mediatorHyperplane = (mean(moyennes[2,]))
+	))
 }
 
 #print(compare.SVM.mH(3,generateDifficultDatasetAlt,100,30))#

@@ -63,27 +63,34 @@ paramètre $\mathtt{C}$:
 + 	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',
 + 			kernel='vanilladot',C=x,cross=20)) ) 
 + 	plot(C.values,svm.cross,type='o',xlab="Valeurs de C",ylab="Erreur",cex=.5,
-+ 			ylim=c(min(c(svm.error,svm.cross)),max(c(svm.cross,svm.error))))
++ 			ylim=c(min(c(svm.error,svm.cross)),max(c(svm.cross,svm.error))),log="x",
++ 			main="Erreurs sur un jeu généré par \n generateDifficultDatasetAlt(100,30) avec cross=20")
 + 	points(C.values,svm.error,type='o',col='blue',cex=.5)
-+ 	legend("topright",c("Erreur de validation croisée",
-+ 			"Erreur à l'apprentissage"),fill=c("black","blue"))
++ 	legend(x=.5,y=.4,c("Erreur de validation croisée","Erreur à l'apprentissage"),
++ 			fill=c("black","blue"))
 + }
 > SVM.accuracy.wrt.C(generateDifficultDatasetAlt(100,30))#
 \end{Sinput}
 \end{Schunk}
-\includegraphics{rapport-SVMaccuracywrtC}
 \newline
 Commentaire des résultats :
+\paragraph{}Plus le nombre de paramètres des vecteurs (dimensions) augmente, plus la 
+méthode SVM est efficace. En effet, elle produit toujours le même taux d'erreur, 
+quelque soit la valeur du paramètre C choisie, mis à part proche des faibles valeurs.
 \paragraph{5.2.}Fonction $\mathtt{selectC(d)}$ qui choisit une valeur de
  $\mathtt{C}$ pour un ensemble d'apprentissage $\mathtt{d}$ :
 \begin{Schunk}
 \begin{Sinput}
 > selectC <- function(d) {
-+ 	C.values <- sapply(c(seq(-10,10,by=1)), function (x) 2^x)
++ 	C.values <- sapply(c(seq(-10,10,le=40)), function (x) 2^x)
 + 	svm.cross <- sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',
 + 			kernel='vanilladot',C=x,cross=20)) )
-+ 	tab <- as.data.frame(cbind(C.values,svm.cross))
-+ 	return(tab$C.values[tab$svm.cross==min(svm.cross)])
++ 	svm.error <- sapply(C.values,function(x) error(ksvm(Y~.,data=d,type='C-svc',
++ 			kernel='vanilladot',C=x,cross=20)) ) 
++ 	tab <- as.data.frame(cbind(C.values,svm.cross,svm.error))
++ 	#sur l'ensemble où l'erreur à l'apprentissage est nul, on cherche le minimum 
++ 	#d'erreur de validation croisée
++ 	return(tab$C.values[tab$C.values>1][tab$svm.error==0][tab$svm.cross==min(svm.cross)][1])
 + }
 > resultat.selectC <- selectC(generateDifficultDatasetAlt(100,30))
 \end{Sinput}
@@ -93,39 +100,73 @@ Commentaire des résultats :
 > resultat.selectC
 \end{Sinput}
 \begin{Soutput}
-[1] 0.001953125
+[1] 29.27901
 \end{Soutput}
 \end{Schunk}
 \paragraph{5.3.}Détermination du taux d'erreur moyen de SVMs sur les 
-données générées :
+données générées et comparaison avec l'algorithme mediatorHyperplane :
 \begin{Schunk}
 \begin{Sinput}
-> compare.SVM.mH <- function(nbjeux,fonctionquigenere,taillejeu) {
+> compare.SVM.mH <- function(nbjeux,fonctionquigenere,dimension,taillejeu) {
 + 	f <- function() {
-+ 		d <- fonctionquigenere(taillejeu)
++ 		d <- fonctionquigenere(dimension,taillejeu)
 + 		C.value <- selectC(d)
-+ 		error.SVM <- mean(sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',
-+ 			kernel='vanilladot',C=C.value,cross=5))) )
-+ 		error.mediatorHyperplane <- error.wrt.n(taillejeu,fonctionquigenere)[1]
++ 		error.SVM <- mean(sapply(C.values,function(x) cross(ksvm(Y~.,data=d,type='C-svc',kernel='vanilladot',C=C.value,cross=20))) )
++ 		error.mediatorHyperplane <- error.wrt.n(dimension,taillejeu,fonctionquigenere)[1]
 + 		return(c(error.SVM,error.mediatorHyperplane))
 + 	}
 + 	moyennes <- replicate(nbjeux,f())
-+ 	return(c(mean(moyennes[1,]),(mean(moyennes[2,]))))
++ 	return(list(
++ 		error.SVM = mean(moyennes[1,]),
++ 		error.mediatorHyperplane = (mean(moyennes[2,]))
++ 	))
 + }
+> resultat.compareSVM.mH <- compare.SVM.mH(3,generateDifficultDatasetAlt,100,30)
+\end{Sinput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Sinput}
+> resultat.compareSVM.mH
 \end{Sinput}
 \end{Schunk}
 Tracé de la courbe $\mathtt{ROC}$ :
 \begin{Schunk}
 \begin{Sinput}
-> 
+> CrossValidation.SVM <- function(f=predict,d=generateDifficultDatasetAlt(100,30),N=5) {
++     n <- dim(d)[1]
++     permutation <- sample(1:n)
++     d <- d[permutation,]
++ 
++     fold <- function(i) {
++         a <- round(n * (i - 1) / N + 1)
++         b <- round(n * i / N)
++         test.idx <- a:b
++         train_set <- d[- test.idx,]
++         test_set <- d[test.idx,]
++         C.value <- selectC(train_set)
++         svm<-ksvm(Y~.,data=train_set,type='C-svc',kernel='vanilladot',C=C.value) 
++         f(svm,test_set,type='decision')
++     }
++ 
++     preds <- unlist(lapply(1:N,fold))
++     
++     # pour finir, on remet les prédictions dans le bon ordre
++     preds[order(permutation)]
++ }
 \end{Sinput}
 \end{Schunk}
-Comparaison des résultats à l'algorithme de l'hyperplan médiateur :
 \begin{Schunk}
 \begin{Sinput}
-> 
+> plot.ROC.SVM <- function(d=generateDifficultDatasetAlt(100,30),N=5) {
++ 	resultat.cv.SVM<-CrossValidation.SVM(d=d,N=N)
++ 	predictor<-prediction(resultat.cv.SVM,d$Y)
++ 	perfector<-performance(predictor,measure="sens",x.measure="spec")
++ 	plot(perfector)
++ }
+> plot.ROC.SVM(N=20)
 \end{Sinput}
 \end{Schunk}
+\includegraphics{rapport-plotROCSVM}
 \paragraph{5.4.}Représentation graphique du comportement des deux 
 algorithmes sur un ensemble d'apprentissage généré par 
 $\mathtt{generateDifficultDataset}$ :
